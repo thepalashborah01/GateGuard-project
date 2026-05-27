@@ -1405,7 +1405,7 @@ async function loadFromCloud(){
   } catch(err){
     console.error('Cloud load failed:', err.message);
     setSyncStatus('offline');
-    toast('Offline — using cached data', 'warn');
+    toast('Sync: '+err.message, 'red');
   }
 }
 
@@ -1420,9 +1420,11 @@ async function saveEntryToCloud(entry){
       method:entry.method,        wl_type:entry.wlType,
     });
     setSyncStatus('synced');
+    toast('✓ Synced to cloud','green');
   } catch(err){
     console.error('Save entry failed:', err.message);
     setSyncStatus('error');
+    toast('Sync failed: '+err.message,'red');
   }
 }
 
