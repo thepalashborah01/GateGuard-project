@@ -533,9 +533,164 @@ canvas{display:none;}
   .dash-2col{grid-template-columns:1fr;}
   .bar-chart{height:80px;}
 }
+
+/* ══ LOGIN SCREEN ══════════════════════════════════════════════ */
+#loginScreen{
+  position:fixed;inset:0;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  z-index:2000;padding:20px;
+  flex-direction:column;gap:0;
+}
+.login-wrap{width:100%;max-width:380px;display:flex;flex-direction:column;gap:20px;}
+.login-logo{display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:4px;}
+.login-logo-mark{width:48px;height:48px;background:var(--blue);border-radius:14px;display:flex;align-items:center;justify-content:center;}
+.login-logo-mark svg{width:26px;height:26px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.login-logo-text{font-size:26px;font-weight:700;letter-spacing:-.4px;}
+.login-subtitle{text-align:center;font-size:13px;color:var(--text2);margin-top:-12px;}
+
+/* Role toggle */
+.role-toggle{display:flex;background:var(--surface3);border-radius:12px;padding:3px;gap:3px;}
+.role-btn{flex:1;padding:10px;border-radius:9px;border:none;background:transparent;
+  font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;color:var(--text2);
+  display:flex;flex-direction:column;align-items:center;gap:4px;}
+.role-btn .rb-icon{font-size:22px;}
+.role-btn .rb-label{font-size:12px;letter-spacing:.2px;}
+.role-btn.active{background:var(--surface);color:var(--blue);box-shadow:var(--shadow);}
+
+/* PIN pad */
+.pin-section{display:flex;flex-direction:column;gap:16px;}
+.pin-dots{display:flex;justify-content:center;gap:14px;padding:8px 0;}
+.pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--border2);background:transparent;transition:all .2s;}
+.pin-dot.filled{background:var(--blue);border-color:var(--blue);}
+.pin-dot.error{background:var(--red);border-color:var(--red);animation:shake .3s ease;}
+.pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.pin-key{background:var(--surface);border:none;border-radius:14px;padding:18px;
+  font-size:22px;font-weight:500;cursor:pointer;color:var(--text);
+  box-shadow:var(--shadow);transition:all .15s;font-family:inherit;}
+.pin-key:active{transform:scale(.94);background:var(--surface3);}
+.pin-key.pin-del{font-size:18px;}
+.pin-key.pin-empty{background:transparent;box-shadow:none;cursor:default;}
+
+/* Management login form */
+.mgmt-section{display:flex;flex-direction:column;gap:10px;}
+.login-input{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;
+  padding:13px 14px;font-size:15px;color:var(--text);outline:none;
+  transition:border-color .18s;font-family:inherit;width:100%;}
+.login-input:focus{border-color:var(--blue);background:var(--surface);}
+.login-input::placeholder{color:var(--text3);}
+.login-error{font-size:13px;color:var(--red);text-align:center;min-height:18px;}
+.login-hint{font-size:11px;color:var(--text3);text-align:center;}
+
+/* Logged in user chip in header */
+.user-chip{display:flex;align-items:center;gap:6px;background:var(--surface2);
+  border:0.5px solid var(--border2);border-radius:20px;padding:5px 12px;
+  font-size:12px;font-weight:500;cursor:pointer;color:var(--text2);transition:all .15s;}
+.user-chip:hover{background:var(--surface3);}
+.user-chip .uc-role{font-weight:600;}
+.user-chip.uc-mgmt .uc-role{color:var(--purple);}
+.user-chip.uc-staff .uc-role{color:var(--blue);}
+
+/* Staff management tab content */
+.staff-section{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;}
+.staff-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:0.5px solid var(--border);}
+.staff-row:last-child{border-bottom:none;}
+.staff-avatar{width:36px;height:36px;border-radius:50%;background:var(--blue-light);
+  display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.staff-info{flex:1;}
+.staff-name{font-size:14px;font-weight:600;color:var(--text);}
+.staff-meta{font-size:11px;color:var(--text3);}
+.staff-pin-hidden{letter-spacing:3px;color:var(--text3);}
+
+/* Change password section */
+.pwd-section{background:var(--surface);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;}
+
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+@media(max-width:768px){
+  .login-wrap{max-width:340px;}
+  .pin-key{padding:16px;}
+}
+
+/* ── STAFF PAGE ── */
+#pg-staff{flex-direction:column;}
+#pg-staff.active{display:flex;}
+
+/* Logout button */
+.logout-btn{display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:20px;border:0.5px solid rgba(255,59,48,.3);background:rgba(255,59,48,.08);color:var(--red);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit;}
+.logout-btn:hover{background:rgba(255,59,48,.15);}
+.mob-tab-logout svg{stroke:var(--red);}
+
+/* User chip — desktop only */
+.user-chip{display:none;}
+
+@media(min-width:769px){
+  .user-chip{display:flex;}
+  #mobWelcomeBar{display:none !important;}
+}
+@media(max-width:768px){
+  .logout-btn{display:flex;}
+  #pg-staff.active{padding-bottom:80px;}
+}
 </style>
 </head>
 <body>
+
+<!-- ══ LOGIN SCREEN ══════════════════════════════════════════ -->
+<div id="loginScreen">
+  <div class="login-wrap">
+    <div class="login-logo">
+      <div class="login-logo-mark">
+        <svg viewBox="0 0 24 24"><path d="M12 2L4 7v5c0 5.25 3.5 10.15 8 11.35C16.5 22.15 20 17.25 20 12V7L12 2z"/></svg>
+      </div>
+      <div class="login-logo-text">GateGuard</div>
+    </div>
+    <div class="login-subtitle">Select your role to continue</div>
+
+    <!-- Role toggle -->
+    <div class="role-toggle">
+      <button class="role-btn active" id="roleStaff" onclick="switchRole('staff')">
+        <span class="rb-icon">👮</span><span class="rb-label">Security Staff</span>
+      </button>
+      <button class="role-btn" id="roleMgmt" onclick="switchRole('mgmt')">
+        <span class="rb-icon">👔</span><span class="rb-label">Management</span>
+      </button>
+    </div>
+
+    <!-- STAFF: PIN pad -->
+    <div class="pin-section" id="pinSection">
+      <div style="text-align:center;font-size:14px;color:var(--text2)">Enter your PIN</div>
+      <div class="pin-dots" id="pinDots">
+        <div class="pin-dot" id="pd0"></div>
+        <div class="pin-dot" id="pd1"></div>
+        <div class="pin-dot" id="pd2"></div>
+        <div class="pin-dot" id="pd3"></div>
+      </div>
+      <div class="pin-grid">
+        <button class="pin-key" onclick="pinKey('1')">1</button>
+        <button class="pin-key" onclick="pinKey('2')">2</button>
+        <button class="pin-key" onclick="pinKey('3')">3</button>
+        <button class="pin-key" onclick="pinKey('4')">4</button>
+        <button class="pin-key" onclick="pinKey('5')">5</button>
+        <button class="pin-key" onclick="pinKey('6')">6</button>
+        <button class="pin-key" onclick="pinKey('7')">7</button>
+        <button class="pin-key" onclick="pinKey('8')">8</button>
+        <button class="pin-key" onclick="pinKey('9')">9</button>
+        <button class="pin-key pin-empty"></button>
+        <button class="pin-key" onclick="pinKey('0')">0</button>
+        <button class="pin-key pin-del" onclick="pinBack()">⌫</button>
+      </div>
+      <div class="login-error" id="pinError"></div>
+    </div>
+
+    <!-- MANAGEMENT: username + password -->
+    <div class="mgmt-section" id="mgmtSection" style="display:none">
+      <input class="login-input" id="loginUser" type="text" placeholder="Username" autocomplete="off"/>
+      <input class="login-input" id="loginPass" type="password" placeholder="Password"/>
+      <button class="btn btn-blue" style="width:100%;padding:14px;font-size:15px" onclick="mgmtLogin()">Sign In</button>
+      <div class="login-error" id="mgmtError"></div>
+      <div class="login-hint" id="loginHint">Default: admin / 1234</div>
+    </div>
+  </div>
+</div>
 
 <header>
   <div class="logo-mark">
@@ -547,12 +702,21 @@ canvas{display:none;}
     <button class="nav-btn active" onclick="showPage('guard')" id="tab-guard">Guard View</button>
     <button class="nav-btn" onclick="showPage('wl')" id="tab-wl">Manage Vehicles</button>
     <button class="nav-btn" onclick="showPage('dash')" id="tab-dash">Dashboard</button>
+    <button class="nav-btn" onclick="showPage('staff')" id="tab-staff" style="display:none">Staff</button>
   </nav>
 
   <div class="h-stats">
     <div class="h-chip"><div class="dot dot-blue"></div>Today <span class="val" id="hToday">0</span></div>
     <div class="h-chip"><div class="dot dot-green"></div>On Premises <span class="val" id="hOnsite">0</span></div>
     <div class="h-chip"><div class="dot dot-red"></div>Blocked <span class="val" id="hBlocked">0</span></div>
+    <div class="user-chip" id="userChip">
+      <span id="ucName">—</span>
+      <span class="uc-role" id="ucRole">—</span>
+    </div>
+    <button class="logout-btn" onclick="logout()" title="Logout">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Logout
+    </button>
     <div class="key-chip key-unset" id="keyChip" onclick="openKeyModal()">
       <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
       <span id="keyLabel">Set Vision Key</span>
@@ -560,7 +724,20 @@ canvas{display:none;}
   </div>
 </header>
 
-<!-- ── GUARD PAGE ── -->
+<!-- Mobile welcome bar — shown only on mobile after login -->
+<div id="mobWelcomeBar" style="display:none;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--surface);border-bottom:0.5px solid var(--border2);">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div style="width:34px;height:34px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:16px;">👤</div>
+    <div>
+      <div style="font-size:14px;font-weight:600;color:var(--text)" id="mobWelcomeName">—</div>
+      <div style="font-size:11px;font-weight:500;" id="mobWelcomeRole">—</div>
+    </div>
+  </div>
+  <button class="logout-btn" onclick="logout()" style="display:flex">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+    Logout
+  </button>
+</div>
 <div class="page active" id="pg-guard">
 
   <div class="l-col">
@@ -719,7 +896,39 @@ canvas{display:none;}
       <div class="wl-grid-wrap">
         <div class="wl-grid" id="wlGrid"></div>
       </div>
+
     </div>
+  </div>
+</div>
+
+
+<!-- ── STAFF PAGE ── -->
+<div class="page" id="pg-staff">
+  <div class="dash-wrap" style="max-width:600px;margin:0 auto;">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <div class="dash-title">Security Staff</div>
+      <div style="font-size:13px;color:var(--text3)" id="staffCount">—</div>
+    </div>
+
+    <!-- Guard list -->
+    <div class="staff-section" id="staffList"></div>
+
+    <!-- Add new guard -->
+    <div style="background:var(--surface);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px;">
+      <div class="dash-section-title" style="margin-bottom:0">Add New Guard</div>
+      <div class="form-group">
+        <div class="form-lbl">Guard Name</div>
+        <input class="form-in" id="newStaffName" type="text" placeholder="e.g. Ravi Kumar"/>
+      </div>
+      <div class="form-group">
+        <div class="form-lbl">4-Digit PIN</div>
+        <input class="form-in" id="newStaffPin" type="tel" placeholder="e.g. 5821" maxlength="4"
+          style="font-size:24px;letter-spacing:10px;font-family:monospace;text-align:center"/>
+      </div>
+      <button class="btn btn-blue" onclick="addStaff()">Add Guard</button>
+    </div>
+
   </div>
 </div>
 
@@ -751,6 +960,24 @@ canvas{display:none;}
     <div class="block-plate" id="blockPlate">—</div>
     <div class="block-note" id="blockNote">This vehicle is on the blocked list.</div>
     <button class="block-ok" onclick="closeBlock()">Acknowledge</button>
+  </div>
+</div>
+
+
+<!-- Force change password modal (first login only) -->
+<div class="modal-bg" id="pwdModal" style="display:none">
+  <div class="modal-box">
+    <div class="modal-icon" style="background:var(--orange-light)">
+      <svg width="26" height="26" fill="none" stroke="var(--orange)" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <div class="modal-title">Set Your Password</div>
+    <div class="modal-sub">You're using the default password. Please set a new one to continue.</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px">
+      <input class="login-input" id="pwdNew" type="password" placeholder="New password (min 4 chars)"/>
+      <input class="login-input" id="pwdConfirm" type="password" placeholder="Confirm new password"/>
+    </div>
+    <button class="btn btn-blue" style="width:100%" onclick="submitForcePwd()">Set Password & Continue</button>
+    <div class="login-error" id="pwdModalError" style="margin-top:8px"></div>
   </div>
 </div>
 
@@ -867,13 +1094,234 @@ canvas{display:none;}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
     <span>Dashboard</span>
   </button>
+  <button class="mob-tab" id="mob-tab-staff" onclick="showPage('staff');setMobTab('staff')" style="display:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <span>Staff</span>
+  </button>
   <button class="mob-tab" id="mob-tab-key" onclick="openKeyModal()">
     <svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
     <span id="mobKeyLabel">API Key</span>
   </button>
+  <button class="mob-tab" id="mob-tab-logout" onclick="logout()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+    <span style="color:var(--red)">Logout</span>
+  </button>
 </div>
 
 <script>
+
+// ══ AUTH STATE ══════════════════════════════════════════════════
+let currentUser = null; // {name, role:'staff'|'mgmt'}
+let pinBuffer   = '';
+
+function getAuth(){
+  return JSON.parse(localStorage.getItem('gg_auth') || JSON.stringify({
+    mgmt:{ username:'admin', password:'1234', mustChange:true },
+    staff:[]
+  }));
+}
+function saveAuth(a){ localStorage.setItem('gg_auth',JSON.stringify(a)); }
+
+// ── ROLE SWITCH ──────────────────────────────────────────────
+function switchRole(r){
+  document.getElementById('roleStaff').classList.toggle('active', r==='staff');
+  document.getElementById('roleMgmt').classList.toggle('active', r==='mgmt');
+  document.getElementById('pinSection').style.display  = r==='staff' ? 'flex' : 'none';
+  document.getElementById('mgmtSection').style.display = r==='mgmt'  ? 'flex' : 'none';
+  pinBuffer=''; updatePinDots();
+  document.getElementById('pinError').textContent='';
+  document.getElementById('mgmtError').textContent='';
+}
+
+// ── PIN PAD ──────────────────────────────────────────────────
+function pinKey(d){
+  if(pinBuffer.length>=4) return;
+  pinBuffer += d;
+  updatePinDots();
+  if(pinBuffer.length===4) setTimeout(tryPinLogin,120);
+}
+function pinBack(){
+  pinBuffer = pinBuffer.slice(0,-1);
+  updatePinDots();
+  document.getElementById('pinError').textContent='';
+}
+function updatePinDots(){
+  for(let i=0;i<4;i++){
+    const dot = document.getElementById('pd'+i);
+    dot.classList.toggle('filled', i < pinBuffer.length);
+    dot.classList.remove('error');
+  }
+}
+function tryPinLogin(){
+  const auth = getAuth();
+  const guard = auth.staff.find(s=>s.pin===pinBuffer);
+  if(guard){
+    loginAs(guard.name, 'staff');
+  } else {
+    // Shake dots red
+    for(let i=0;i<4;i++) document.getElementById('pd'+i).classList.add('error');
+    document.getElementById('pinError').textContent = 'Incorrect PIN — try again';
+    setTimeout(()=>{
+      pinBuffer=''; updatePinDots();
+      document.getElementById('pinError').textContent='';
+    }, 900);
+  }
+}
+
+// ── MGMT LOGIN ───────────────────────────────────────────────
+function mgmtLogin(){
+  const auth = getAuth();
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  if(u===auth.mgmt.username && p===auth.mgmt.password){
+    if(auth.mgmt.mustChange){
+      // Log them in first, then show the force-change modal
+      loginAs('Management','mgmt');
+      setTimeout(()=>{
+        document.getElementById('pwdNew').value='';
+        document.getElementById('pwdConfirm').value='';
+        document.getElementById('pwdModalError').textContent='';
+        document.getElementById('pwdModal').style.display='flex';
+      },200);
+      return;
+    }
+    loginAs('Management','mgmt');
+  } else {
+    document.getElementById('mgmtError').textContent = 'Incorrect username or password';
+    document.getElementById('loginPass').value='';
+  }
+}
+
+// ── LOGIN / LOGOUT ───────────────────────────────────────────
+function loginAs(name, role){
+  currentUser = {name, role};
+  document.getElementById('loginScreen').style.display='none';
+
+  // Update header chip
+  const chip = document.getElementById('userChip');
+  document.getElementById('ucName').textContent = name;
+  document.getElementById('ucRole').textContent = role==='mgmt' ? '· Management' : '· Security Staff';
+  chip.className = 'user-chip '+(role==='mgmt'?'uc-mgmt':'uc-staff');
+  chip.style.display = 'flex';
+
+  // Mobile welcome bar
+  const bar = document.getElementById('mobWelcomeBar');
+  if(bar){
+    document.getElementById('mobWelcomeName').textContent = name;
+    document.getElementById('mobWelcomeRole').textContent = role==='mgmt' ? 'Management' : 'Security Staff';
+    document.getElementById('mobWelcomeRole').style.color = role==='mgmt' ? 'var(--purple)' : 'var(--blue)';
+    bar.style.display = 'flex';
+  }
+
+  // Show/hide management-only tabs
+  const mgmtOnly = ['tab-dash','tab-staff'];
+  const mobMgmtOnly = ['mob-tab-dash','mob-tab-staff'];
+  mgmtOnly.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display = role==='mgmt'?'':'none';
+  });
+  mobMgmtOnly.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display = role==='mgmt'?'':'none';
+  });
+
+  // Go to guard view
+  showPage('guard');
+}
+
+function showUserMenu(){
+  if(!currentUser) return;
+  const name = currentUser.name;
+  const role = currentUser.role==='mgmt'?'Management':'Security Staff';
+  if(confirm(name+' ('+role+')\n\nTap OK to log out.')){
+    logout();
+  }
+}
+
+function logout(){
+  currentUser = null;
+  pinBuffer = '';
+  updatePinDots();
+  document.getElementById('loginUser').value='';
+  document.getElementById('loginPass').value='';
+  const bar = document.getElementById('mobWelcomeBar');
+  if(bar) bar.style.display='none';
+  document.getElementById('pinError').textContent='';
+  document.getElementById('mgmtError').textContent='';
+  switchRole('staff');
+  document.getElementById('loginScreen').style.display='flex';
+}
+
+
+function submitForcePwd(){
+  const nw = document.getElementById('pwdNew').value;
+  const cf = document.getElementById('pwdConfirm').value;
+  if(nw.length < 4){ document.getElementById('pwdModalError').textContent='Min 4 characters'; return; }
+  if(nw !== cf){ document.getElementById('pwdModalError').textContent='Passwords do not match'; return; }
+  const auth = getAuth();
+  auth.mgmt.password = nw;
+  auth.mgmt.mustChange = false;
+  saveAuth(auth);
+  document.getElementById('pwdModal').style.display='none';
+  toast('Password set successfully!','green');
+}
+
+// ── STAFF MANAGEMENT ─────────────────────────────────────────
+function addStaff(){
+  const name = document.getElementById('newStaffName').value.trim();
+  const pin  = document.getElementById('newStaffPin').value.trim();
+  if(!name){ toast('Enter guard name','red'); return; }
+  if(!/^\d{4}$/.test(pin)){ toast('PIN must be exactly 4 digits','red'); return; }
+  const auth = getAuth();
+  if(auth.staff.find(s=>s.pin===pin)){ toast('PIN already in use — choose another','red'); return; }
+  auth.staff.push({id:Date.now(), name, pin});
+  saveAuth(auth);
+  document.getElementById('newStaffName').value='';
+  document.getElementById('newStaffPin').value='';
+  renderStaffList();
+  toast(name+' added as Security Staff','green');
+}
+
+function removeStaff(id){
+  const auth = getAuth();
+  const guard = auth.staff.find(s=>s.id===id);
+  if(!guard) return;
+  if(!confirm('Remove '+guard.name+'? They will no longer be able to log in.')) return;
+  auth.staff = auth.staff.filter(s=>s.id!==id);
+  saveAuth(auth);
+  renderStaffList();
+  toast(guard.name+' removed','blue');
+}
+
+function updateStaffCount(){
+  const auth = getAuth();
+  const el = document.getElementById('staffCount');
+  if(el) el.textContent = auth.staff.length + ' guard' + (auth.staff.length!==1?'s':'') + ' registered';
+}
+
+function renderStaffList(){
+  const el = document.getElementById('staffList');
+  if(!el) return;
+  const auth = getAuth();
+  if(!auth.staff.length){
+    el.innerHTML='<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">No guards added yet.<br>Add your first guard below.</div>';
+    return;
+  }
+  el.innerHTML = auth.staff.map(s=>'<div class="staff-row">'
+    +'<div class="staff-avatar">👮</div>'
+    +'<div class="staff-info">'
+      +'<div class="staff-name">'+s.name+'</div>'
+      +'<div class="staff-meta">PIN: <span class="staff-pin-hidden">••••</span></div>'
+    +'</div>'
+    +'<button class="del-btn" onclick="removeStaff('+s.id+')" title="Remove"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button>'
+    +'</div>'
+  ).join('');
+}
+
+// ── CHANGE PASSWORD ──────────────────────────────────────────
+// changePwd removed — password set one-time via force-change modal on first login
+
+
 // STATE
 let entries = JSON.parse(localStorage.getItem('gg_e') || '[]');
 let wlList  = JSON.parse(localStorage.getItem('gg_w') || '[]');
@@ -900,6 +1348,7 @@ function showPage(p){
   // Scroll to top on mobile page switch
   window.scrollTo(0,0);
   if(p==='wl'){renderWl();updateWlCounts();}
+  if(p==='staff'){renderStaffList();updateStaffCount();}
   if(p==='dash'){renderDash();}
 }
 
@@ -1713,7 +2162,12 @@ if(!wlList.length){
   save();
 }
 renderLog(); updateStats(); updateWlCounts(); updateKeyChip();
-if(!localStorage.getItem('gg_vkey')) setTimeout(openKeyModal,800);
+renderStaffList();
+// Show login screen on load — always require login
+document.getElementById('loginScreen').style.display='flex';
+// Hide dashboard tab until logged in as mgmt
+['tab-dash','tab-staff'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
+['mob-tab-dash','mob-tab-staff'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
 </script>
 </body>
 </html>
