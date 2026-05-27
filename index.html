@@ -730,7 +730,10 @@ canvas{display:none;}
     <div style="width:34px;height:34px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:16px;">👤</div>
     <div>
       <div style="font-size:14px;font-weight:600;color:var(--text)" id="mobWelcomeName">—</div>
-      <div style="font-size:11px;font-weight:500;" id="mobWelcomeRole">—</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="font-size:11px;font-weight:500;" id="mobWelcomeRole">—</div>
+        <div style="font-size:11px;" id="mobSyncStatus" style="display:none">◌</div>
+      </div>
     </div>
   </div>
   <button class="logout-btn" onclick="logout()" style="display:flex">
@@ -1191,6 +1194,9 @@ function mgmtLogin(){
 // ── LOGIN / LOGOUT ───────────────────────────────────────────
 function loginAs(name, role){
   currentUser = {name, role};
+  // Persist session so refresh doesn't log out
+  localStorage.setItem('gg_session', JSON.stringify({name, role}));
+
   document.getElementById('loginScreen').style.display='none';
 
   // Update header chip
@@ -1207,6 +1213,9 @@ function loginAs(name, role){
     document.getElementById('mobWelcomeRole').textContent = role==='mgmt' ? 'Management' : 'Security Staff';
     document.getElementById('mobWelcomeRole').style.color = role==='mgmt' ? 'var(--purple)' : 'var(--blue)';
     bar.style.display = 'flex';
+    // Show sync status in welcome bar on mobile
+    const ss = document.getElementById('mobSyncStatus');
+    if(ss) ss.style.display='block';
   }
 
   // Show/hide management-only tabs
@@ -1236,6 +1245,7 @@ function showUserMenu(){
 
 function logout(){
   currentUser = null;
+  localStorage.removeItem('gg_session');
   pinBuffer = '';
   updatePinDots();
   document.getElementById('loginUser').value='';
@@ -1358,8 +1368,6 @@ async function supa(method, table, body=null, query=''){
 
 // Sync status indicator
 function setSyncStatus(status){
-  const el = document.getElementById('syncStatus');
-  if(!el) return;
   const map = {
     syncing: ['↻ Syncing...', 'var(--blue)'],
     synced:  ['✓ Synced',     'var(--green)'],
@@ -1367,8 +1375,12 @@ function setSyncStatus(status){
     error:   ['✕ Sync error', 'var(--red)'],
   };
   const [txt, col] = map[status] || map.offline;
-  el.textContent = txt;
-  el.style.color = col;
+  // Desktop status bar
+  const el = document.getElementById('syncStatus');
+  if(el){ el.textContent = txt; el.style.color = col; }
+  // Mobile welcome bar
+  const mob = document.getElementById('mobSyncStatus');
+  if(mob){ mob.textContent = txt; mob.style.color = col; }
 }
 
 // ── LOAD from Supabase ──────────────────────────────────────────
@@ -2318,8 +2330,22 @@ if(!wlList.length){
 }
 renderLog(); updateStats(); updateWlCounts(); updateKeyChip();
 renderStaffList();
-// Show login screen on load — always require login
-document.getElementById('loginScreen').style.display='flex';
+
+// Restore session if previously logged in
+const savedSession = localStorage.getItem('gg_session');
+if(savedSession){
+  try{
+    const {name, role} = JSON.parse(savedSession);
+    loginAs(name, role);
+  } catch(e){
+    localStorage.removeItem('gg_session');
+    document.getElementById('loginScreen').style.display='flex';
+  }
+} else {
+  // Show login screen on load
+  document.getElementById('loginScreen').style.display='flex';
+}
+
 // Hide dashboard tab until logged in as mgmt
 ['tab-dash','tab-staff'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
 ['mob-tab-dash','mob-tab-staff'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
