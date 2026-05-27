@@ -828,7 +828,7 @@ canvas{display:none;}
       <div class="entry-list" id="entryList"></div>
     </div>
     <div class="s-bar">
-      <span>GateGuard — Phase 1</span>
+      <span>GateGuard — Phase 1</span><span id="syncStatus" style="font-size:11px;color:var(--text3)">◌ Connecting...</span>
       <span id="clock-disp"></span>
     </div>
   </div>
@@ -1102,10 +1102,6 @@ canvas{display:none;}
     <svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
     <span id="mobKeyLabel">API Key</span>
   </button>
-  <button class="mob-tab" id="mob-tab-logout" onclick="logout()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-    <span style="color:var(--red)">Logout</span>
-  </button>
 </div>
 
 <script>
@@ -1261,7 +1257,7 @@ function submitForcePwd(){
   const auth = getAuth();
   auth.mgmt.password = nw;
   auth.mgmt.mustChange = false;
-  saveAuth(auth);
+  saveAuth(auth); saveAuthToCloud();
   document.getElementById('pwdModal').style.display='none';
   toast('Password set successfully!','green');
 }
@@ -1275,7 +1271,7 @@ function addStaff(){
   const auth = getAuth();
   if(auth.staff.find(s=>s.pin===pin)){ toast('PIN already in use — choose another','red'); return; }
   auth.staff.push({id:Date.now(), name, pin});
-  saveAuth(auth);
+  saveAuth(auth); saveAuthToCloud();
   document.getElementById('newStaffName').value='';
   document.getElementById('newStaffPin').value='';
   renderStaffList();
@@ -1288,7 +1284,7 @@ function removeStaff(id){
   if(!guard) return;
   if(!confirm('Remove '+guard.name+'? They will no longer be able to log in.')) return;
   auth.staff = auth.staff.filter(s=>s.id!==id);
-  saveAuth(auth);
+  saveAuth(auth); saveAuthToCloud();
   renderStaffList();
   toast(guard.name+' removed','blue');
 }
@@ -1321,6 +1317,151 @@ function renderStaffList(){
 // ── CHANGE PASSWORD ──────────────────────────────────────────
 // changePwd removed — password set one-time via force-change modal on first login
 
+
+
+// ══ SUPABASE CONFIG ═════════════════════════════════════════════
+const SUPA_URL = 'https://lbguakbyszfkusizarlm.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxiZ3Vha2J5c3pma3VzaXphcmxtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NzM1OTAsImV4cCI6MjA5NTQ0OTU5MH0.nXV8U1spTAltRsU908huqHAjwmfftIKtpA56MSdZWvM';
+
+// Direct REST helper — no SDK needed
+async function supa(method, table, body=null, query=''){
+  const url = `${SUPA_URL}/rest/v1/${table}${query}`;
+  const headers = {
+    'apikey': SUPA_KEY,
+    'Authorization': `Bearer ${SUPA_KEY}`,
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'x-client-info': 'gateguard/1.0',
+  };
+  if(method==='POST') headers['Prefer'] = 'resolution=merge-duplicates,return=minimal';
+
+  try{
+    const res = await fetch(url, {
+      method,
+      headers,
+      mode: 'cors',
+      credentials: 'omit',
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if(!res.ok){
+      const err = await res.text();
+      throw new Error(`${res.status}: ${err}`);
+    }
+    const txt = await res.text();
+    return txt ? JSON.parse(txt) : [];
+  } catch(e){
+    if(e.name === 'TypeError' && e.message.includes('fetch')){
+      throw new Error('Network unavailable — working offline');
+    }
+    throw e;
+  }
+}
+
+// Sync status indicator
+function setSyncStatus(status){
+  const el = document.getElementById('syncStatus');
+  if(!el) return;
+  const map = {
+    syncing: ['↻ Syncing...', 'var(--blue)'],
+    synced:  ['✓ Synced',     'var(--green)'],
+    offline: ['◌ Offline',    'var(--orange)'],
+    error:   ['✕ Sync error', 'var(--red)'],
+  };
+  const [txt, col] = map[status] || map.offline;
+  el.textContent = txt;
+  el.style.color = col;
+}
+
+// ── LOAD from Supabase ──────────────────────────────────────────
+async function loadFromCloud(){
+  try{
+    setSyncStatus('syncing');
+    const [eData, wData, cData] = await Promise.all([
+      supa('GET','entries','','?order=entry_ts.desc'),
+      supa('GET','whitelist'),
+      supa('GET','config'),
+    ]);
+
+    entries = (eData||[]).map(r=>({
+      id:r.id, plate:r.plate, date:r.date,
+      entryTime:r.entry_time, entryTs:r.entry_ts,
+      exitTime:r.exit_time,   exitTs:r.exit_ts,
+      method:r.method,        wlType:r.wl_type,
+    }));
+
+    wlList = (wData||[]).map(r=>({
+      id:r.id, plate:r.plate,
+      name:r.name, note:r.note, type:r.type,
+    }));
+
+    const authRow = (cData||[]).find(r=>r.key==='auth');
+    if(authRow){ try{ localStorage.setItem('gg_auth', authRow.value); }catch(e){} }
+
+    localStorage.setItem('gg_e', JSON.stringify(entries));
+    localStorage.setItem('gg_w', JSON.stringify(wlList));
+
+    renderLog(); updateStats(); updateWlCounts(); renderStaffList();
+    setSyncStatus('synced');
+  } catch(err){
+    console.error('Cloud load failed:', err.message);
+    setSyncStatus('offline');
+    toast('Offline — using cached data', 'warn');
+  }
+}
+
+// ── SAVE entry ──────────────────────────────────────────────────
+async function saveEntryToCloud(entry){
+  try{
+    setSyncStatus('syncing');
+    await supa('POST','entries',{
+      id:entry.id, plate:entry.plate, date:entry.date,
+      entry_time:entry.entryTime, entry_ts:entry.entryTs,
+      exit_time:entry.exitTime,   exit_ts:entry.exitTs,
+      method:entry.method,        wl_type:entry.wlType,
+    });
+    setSyncStatus('synced');
+  } catch(err){
+    console.error('Save entry failed:', err.message);
+    setSyncStatus('error');
+  }
+}
+
+// ── SAVE whitelist ──────────────────────────────────────────────
+async function saveWlToCloud(){
+  try{
+    await supa('DELETE','whitelist','','?id=neq.0');
+    if(wlList.length){
+      await supa('POST','whitelist', wlList.map(w=>({
+        id:w.id, plate:w.plate, name:w.name||'', note:w.note||'', type:w.type
+      })));
+    }
+    setSyncStatus('synced');
+  } catch(err){
+    console.error('Save whitelist failed:', err.message);
+    setSyncStatus('error');
+  }
+}
+
+// ── SAVE auth config ────────────────────────────────────────────
+async function saveAuthToCloud(){
+  try{
+    const authData = localStorage.getItem('gg_auth');
+    if(!authData) return;
+    await supa('POST','config',{key:'auth', value:authData});
+  } catch(err){
+    console.error('Save auth failed:', err.message);
+  }
+}
+
+// ── DELETE entry ────────────────────────────────────────────────
+async function deleteEntryFromCloud(id){
+  try{
+    await supa('DELETE','entries','',`?id=eq.${id}`);
+    setSyncStatus('synced');
+  } catch(err){
+    console.error('Delete entry failed:', err.message);
+  }
+}
 
 // STATE
 let entries = JSON.parse(localStorage.getItem('gg_e') || '[]');
@@ -1619,6 +1760,7 @@ function logExit(id){
   e.exitTime=now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
   e.exitTs=now.toISOString();
   save(); renderLog(); updateStats();
+  saveEntryToCloud(e);
   toast('Exit recorded: '+e.plate,'green');
 }
 function dwell(e){
@@ -1702,7 +1844,7 @@ function renderLog(){
   }).join('');
   updateStats();
 }
-function delEntry(id){ entries=entries.filter(e=>e.id!==id); save(); renderLog(); }
+function delEntry(id){ deleteEntryFromCloud(id); entries=entries.filter(e=>e.id!==id); save(); renderLog(); }
 function clearLog(){
   if(!entries.length) return;
   if(confirm('Delete all '+entries.length+' entries? This cannot be undone.')){
@@ -1725,13 +1867,13 @@ function addWl(){
     toast('Already in list','red'); return;
   }
   wlList.unshift({id:Date.now(),plate,name,note,type:selType});
-  save(); renderWl(); updateWlCounts();
+  save(); renderWl(); updateWlCounts(); saveWlToCloud();
   document.getElementById('wlPlate').value='';
   document.getElementById('wlName').value='';
   document.getElementById('wlNote').value='';
   toast(plate+' added as '+(selType==='auth'?'Authorised':'Blocked'),'green');
 }
-function removeWl(id){ wlList=wlList.filter(w=>w.id!==id); save(); renderWl(); updateWlCounts(); toast('Removed','blue'); }
+function removeWl(id){ wlList=wlList.filter(w=>w.id!==id); save(); saveWlToCloud(); renderWl(); updateWlCounts(); toast('Removed','blue'); }
 function setWlF(f,el){
   wlF=f;
   document.querySelectorAll('#pg-wl .seg .seg-btn').forEach(b=>b.classList.remove('active'));
@@ -1809,6 +1951,7 @@ function save(){
   localStorage.setItem('gg_e',JSON.stringify(entries));
   localStorage.setItem('gg_w',JSON.stringify(wlList));
 }
+// Cloud save helpers (called explicitly after each operation)
 
 // TOAST
 let tT;
@@ -2168,6 +2311,8 @@ document.getElementById('loginScreen').style.display='flex';
 // Hide dashboard tab until logged in as mgmt
 ['tab-dash','tab-staff'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
 ['mob-tab-dash','mob-tab-staff'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
+// Load from Supabase on startup
+loadFromCloud();
 </script>
 </body>
 </html>
