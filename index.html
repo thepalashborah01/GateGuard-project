@@ -1343,15 +1343,14 @@ async function supa(method, table, body=null, query=''){
       credentials: 'omit',
       body: body ? JSON.stringify(body) : undefined,
     });
-    if(!res.ok){
-      const err = await res.text();
-      throw new Error(`${res.status}: ${err}`);
-    }
     const txt = await res.text();
+    if(!res.ok){
+      throw new Error(`${res.status} ${res.statusText}: ${txt}`);
+    }
     return txt ? JSON.parse(txt) : [];
   } catch(e){
-    if(e.name === 'TypeError' && e.message.includes('fetch')){
-      throw new Error('Network unavailable — working offline');
+    if(e.name === 'TypeError'){
+      throw new Error('Network error — '+e.message);
     }
     throw e;
   }
@@ -1382,23 +1381,28 @@ async function loadFromCloud(){
       supa('GET','config'),
     ]);
 
-    entries = (eData||[]).map(r=>({
-      id:r.id, plate:r.plate, date:r.date,
-      entryTime:r.entry_time, entryTs:r.entry_ts,
-      exitTime:r.exit_time,   exitTs:r.exit_ts,
-      method:r.method,        wlType:r.wl_type,
-    }));
+    // Only overwrite local data if cloud has actual data
+    // This prevents wiping local cache when Supabase is empty
+    if(eData && eData.length > 0){
+      entries = eData.map(r=>({
+        id:r.id, plate:r.plate, date:r.date,
+        entryTime:r.entry_time, entryTs:r.entry_ts,
+        exitTime:r.exit_time,   exitTs:r.exit_ts,
+        method:r.method,        wlType:r.wl_type,
+      }));
+      localStorage.setItem('gg_e', JSON.stringify(entries));
+    }
 
-    wlList = (wData||[]).map(r=>({
-      id:r.id, plate:r.plate,
-      name:r.name, note:r.note, type:r.type,
-    }));
+    if(wData && wData.length > 0){
+      wlList = wData.map(r=>({
+        id:r.id, plate:r.plate,
+        name:r.name, note:r.note, type:r.type,
+      }));
+      localStorage.setItem('gg_w', JSON.stringify(wlList));
+    }
 
     const authRow = (cData||[]).find(r=>r.key==='auth');
     if(authRow){ try{ localStorage.setItem('gg_auth', authRow.value); }catch(e){} }
-
-    localStorage.setItem('gg_e', JSON.stringify(entries));
-    localStorage.setItem('gg_w', JSON.stringify(wlList));
 
     renderLog(); updateStats(); updateWlCounts(); renderStaffList();
     setSyncStatus('synced');
@@ -1413,12 +1417,18 @@ async function loadFromCloud(){
 async function saveEntryToCloud(entry){
   try{
     setSyncStatus('syncing');
-    await supa('POST','entries',{
-      id:entry.id, plate:entry.plate, date:entry.date,
-      entry_time:entry.entryTime, entry_ts:entry.entryTs,
-      exit_time:entry.exitTime,   exit_ts:entry.exitTs,
-      method:entry.method,        wl_type:entry.wlType,
-    });
+    const payload = {
+      id: entry.id,
+      plate: entry.plate,
+      date: entry.date,
+      entry_time: entry.entryTime,
+      entry_ts: entry.entryTs || new Date().toISOString(),
+      exit_time: entry.exitTime || null,
+      exit_ts: entry.exitTs || null,
+      method: entry.method || 'manual',
+      wl_type: entry.wlType || 'unknown',
+    };
+    const result = await supa('POST','entries', payload);
     setSyncStatus('synced');
     toast('✓ Synced to cloud','green');
   } catch(err){
