@@ -1430,17 +1430,17 @@ async function saveEntryToCloud(entry){
   try{
     setSyncStatus('syncing');
     const payload = {
-      id: entry.id,
-      plate: entry.plate,
-      date: entry.date,
-      entry_time: entry.entryTime,
-      entry_ts: entry.entryTs || new Date().toISOString(),
-      exit_time: entry.exitTime || null,
-      exit_ts: entry.exitTs || null,
-      method: entry.method || 'manual',
-      wl_type: entry.wlType || 'unknown',
+      id: Number(entry.id),
+      plate: String(entry.plate),
+      date: String(entry.date),
+      entry_time: String(entry.entryTime),
+      entry_ts: entry.entryTs ? new Date(entry.entryTs).toISOString() : new Date().toISOString(),
+      exit_time: entry.exitTime ? String(entry.exitTime) : null,
+      exit_ts: entry.exitTs ? new Date(entry.exitTs).toISOString() : null,
+      method: String(entry.method || 'manual'),
+      wl_type: String(entry.wlType || 'unknown'),
     };
-    const result = await supa('POST','entries', payload);
+    await supa('POST','entries', payload);
     setSyncStatus('synced');
     toast('✓ Synced to cloud','green');
   } catch(err){
@@ -2331,24 +2331,28 @@ if(!wlList.length){
 renderLog(); updateStats(); updateWlCounts(); updateKeyChip();
 renderStaffList();
 
-// Restore session if previously logged in
+// Always hide mgmt tabs first
+['tab-dash','tab-staff'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
+['mob-tab-dash','mob-tab-staff'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
+
+// Restore session if previously logged in — MUST happen after tab hiding
 const savedSession = localStorage.getItem('gg_session');
 if(savedSession){
   try{
-    const {name, role} = JSON.parse(savedSession);
-    loginAs(name, role);
+    const sess = JSON.parse(savedSession);
+    if(sess && sess.name && sess.role){
+      loginAs(sess.name, sess.role);
+    } else {
+      throw new Error('Invalid session');
+    }
   } catch(e){
     localStorage.removeItem('gg_session');
     document.getElementById('loginScreen').style.display='flex';
   }
 } else {
-  // Show login screen on load
   document.getElementById('loginScreen').style.display='flex';
 }
 
-// Hide dashboard tab until logged in as mgmt
-['tab-dash','tab-staff'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
-['mob-tab-dash','mob-tab-staff'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
 // Load from Supabase on startup
 loadFromCloud();
 </script>
