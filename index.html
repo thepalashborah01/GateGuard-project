@@ -1688,7 +1688,8 @@ function clearPlate(){
 }
 document.getElementById('plateIn').addEventListener('input',e=>{
   const pos=e.target.selectionStart;
-  e.target.value=e.target.value.toUpperCase();
+  // Uppercase only while typing — normalise on blur/submit
+  e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9 ]/g,'');
   e.target.setSelectionRange(pos,pos);
   cMethod='manual';
   document.getElementById('methodTxt').textContent='Manual entry';
@@ -1699,15 +1700,32 @@ document.getElementById('plateIn').addEventListener('input',e=>{
   else document.getElementById('vc').classList.remove('show');
 });
 document.getElementById('plateIn').addEventListener('keydown',e=>{if(e.key==='Enter')logEntry();});
+document.getElementById('plateIn').addEventListener('blur',e=>{
+  const normalised = normalisePlate(e.target.value);
+  if(normalised) e.target.value = normalised;
+});
+
+// PLATE NORMALISATION
+// Accepts MH01AB1234 or MH 01 AB 1234 or mh01ab1234 — all treated as MH 01 AB 1234
+function normalisePlate(raw){
+  if(!raw) return '';
+  // Remove all spaces and uppercase
+  const clean = raw.trim().toUpperCase().replace(/\s+/g,'');
+  // Try to match Indian plate pattern: 2L 2D 1-3L 4D
+  const m = clean.match(/^([A-Z]{2})(\d{2})([A-Z]{1,3})(\d{4})$/);
+  if(m) return m[1]+' '+m[2]+' '+m[3]+' '+m[4];
+  // If no match, just add spaces back in a readable way
+  return clean.replace(/([A-Z]{2})(\d{2})([A-Z]{1,3})(\d{4})/, '$1 $2 $3 $4') || clean;
+}
 
 // LOOKUP
 function lookup(plate){
-  const n=plate.trim().toUpperCase().replace(/\s+/g,' ');
-  return wlList.find(w=>w.plate.replace(/\s+/g,' ')===n)||null;
+  const n = normalisePlate(plate);
+  return wlList.find(w=>normalisePlate(w.plate)===n)||null;
 }
 function history(plate){
-  const n=plate.trim().toUpperCase().replace(/\s+/g,' ');
-  return entries.filter(e=>e.plate.replace(/\s+/g,' ')===n);
+  const n = normalisePlate(plate);
+  return entries.filter(e=>normalisePlate(e.plate)===n);
 }
 
 // VISITOR CARD
@@ -1758,7 +1776,7 @@ function vcr(k,v){ return '<div class="vc-row"><span class="k">'+k+'</span><span
 
 // LOG ENTRY
 function logEntry(){
-  const raw=document.getElementById('plateIn').value.trim().toUpperCase();
+  const raw=normalisePlate(document.getElementById('plateIn').value);
   if(!raw){ toast('Enter a number plate first','red'); return; }
   const rec=lookup(raw);
   if(rec&&rec.type==='block'){ showBlock(raw,rec); return; }
@@ -1843,7 +1861,7 @@ function renderLog(){
       ? '<span class="exited-chip">Out '+e.exitTime+(d?' · '+d:'')+'</span>'
       : canExit
         ? '<button class="exit-btn" onclick="logExit('+e.id+')">Mark Exit</button>'
-        : '<span style="font-size:11px;color:var(--text3);font-style:italic">Logged by '+e.loggedBy+'</span>';
+        : '<div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:10px;color:var(--text3)">Entry by</span><span style="font-size:12px;font-weight:600;color:var(--text2)">'+( e.loggedBy && e.loggedBy!=="unknown" ? e.loggedBy : "Unknown guard")+'</span></div>';
     const mb=e.method==='auto'?'<span class="chip chip-auto">AI</span>':'<span class="chip chip-manual">Manual</span>';
 
     const desktop='<div class="entry-row-desktop">'
@@ -1852,6 +1870,7 @@ function renderLog(){
         +'<span class="plate-badge">'+e.plate+'</span>'
         +'<div class="er-field"><span class="er-label">Entry</span><span class="er-value blue">'+e.entryTime+'</span><span style="font-size:11px;color:var(--text3)">'+e.date+'</span></div>'
         +'<div class="er-field"><span class="er-label">Status</span>'+chip+'<span style="margin-top:2px">'+mb+'</span></div>'
+        +'<div class="er-field"><span class="er-label">Logged By</span><span class="er-value" style="font-size:11px">' + (e.loggedBy && e.loggedBy!=="unknown" ? e.loggedBy : "—") + '</span></div>'
         +'<div class="er-field"><span class="er-label">Visits / Dwell</span><span class="er-value">'+visits+' visit'+(visits!==1?'s':'')+'</span>'+(d?'<span class="er-value green">'+d+'</span>':'<span style="font-size:11px;color:var(--text3)">'+(e.exitTime?'—':'On site')+'</span>')+'</div>'
       +'</div>'
       +'<div class="er-right">'+exitCell+'<button class="del-btn" onclick="delEntry('+e.id+')" title="Delete"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>'
