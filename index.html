@@ -1401,6 +1401,7 @@ async function loadFromCloud(){
         entryTime:r.entry_time, entryTs:r.entry_ts,
         exitTime:r.exit_time,   exitTs:r.exit_ts,
         method:r.method,        wlType:r.wl_type,
+        loggedBy:r.logged_by||'unknown',
       }));
       localStorage.setItem('gg_e', JSON.stringify(entries));
     }
@@ -1439,6 +1440,7 @@ async function saveEntryToCloud(entry){
       exit_ts: entry.exitTs ? new Date(entry.exitTs).toISOString() : null,
       method: String(entry.method || 'manual'),
       wl_type: String(entry.wlType || 'unknown'),
+      logged_by: String(entry.loggedBy || 'unknown'),
     };
     await supa('POST','entries', payload);
     setSyncStatus('synced');
@@ -1768,7 +1770,8 @@ function logEntry(){
     entryTs:now.toISOString(),
     exitTime:null, exitTs:null,
     method:cMethod,
-    wlType:rec?rec.type:'unknown'
+    wlType:rec?rec.type:'unknown',
+    loggedBy: currentUser ? currentUser.name : 'unknown'
   };
   entries.unshift(e);
   save(); renderLog(); clearPlate(); updateStats();
@@ -1830,9 +1833,17 @@ function renderLog(){
     else chip='<span class="chip chip-orange">Unknown</span>';
     const visits=entries.filter(x=>x.plate.replace(/\s+/g,' ')===e.plate.replace(/\s+/g,' ')).length;
     const d=dwell(e);
-    const exitCell=e.exitTime
-      ?'<span class="exited-chip">Out '+e.exitTime+(d?' · '+d:'')+'</span>'
-      :'<button class="exit-btn" onclick="logExit('+e.id+')">Mark Exit</button>';
+    const canExit = currentUser && (
+      currentUser.role === 'mgmt' ||
+      !e.loggedBy ||
+      e.loggedBy === 'unknown' ||
+      e.loggedBy === currentUser.name
+    );
+    const exitCell = e.exitTime
+      ? '<span class="exited-chip">Out '+e.exitTime+(d?' · '+d:'')+'</span>'
+      : canExit
+        ? '<button class="exit-btn" onclick="logExit('+e.id+')">Mark Exit</button>'
+        : '<span style="font-size:11px;color:var(--text3);font-style:italic">Logged by '+e.loggedBy+'</span>';
     const mb=e.method==='auto'?'<span class="chip chip-auto">AI</span>':'<span class="chip chip-manual">Manual</span>';
 
     const desktop='<div class="entry-row-desktop">'
