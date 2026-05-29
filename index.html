@@ -1772,6 +1772,7 @@ function logEntry(){
   };
   entries.unshift(e);
   save(); renderLog(); clearPlate(); updateStats();
+  saveEntryToCloud(e);
   const v=history(raw).length;
   toast((v>1?'Visit #'+v+' — ':'First visit — ')+raw,'green');
 }
